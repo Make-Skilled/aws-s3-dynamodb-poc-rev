@@ -4,7 +4,7 @@ import boto3
 import uuid
 
 app = Flask(__name__)
-app.secret_key = ''
+app.secret_key = '1234567890'
 
 # AWS Configuration
 AWS_ACCESS_KEY = ''
@@ -146,6 +146,29 @@ def upload_profile_pic():
         print(f"Error: {str(e)}")
     
     return redirect('/dashboard')
+
+@app.route('/listFiles')
+def list_files():
+    if 'email' not in session:
+        return redirect('/')
+
+    try:
+        # Fetch all files from S3 bucket
+        response = s3.list_objects_v2(Bucket=S3_BUCKET)
+        files = []
+
+        if 'Contents' in response:
+            for obj in response['Contents']:
+                file_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{obj['Key']}"
+                files.append(file_url)
+
+        return render_template('list_files.html', files=files)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return "Error fetching files."
+
+
 
 @app.route('/logout')
 def logout():
